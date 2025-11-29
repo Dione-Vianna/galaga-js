@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useAudio } from '../hooks/useAudio'
+import { useAudio } from '../contexts/AudioContext'
 import {
   BULLET_HEIGHT,
   BULLET_SPEED,
@@ -65,11 +65,14 @@ function Game({ onGameOver }) {
   // Audio
   const audio = useAudio()
 
-  // Start background music when game starts
+  // Handle pause/resume music
   useEffect(() => {
-    audio.startMusic()
-    return () => audio.stopMusic()
-  }, [audio])
+    if (isPaused) {
+      audio.pauseMusic()
+    } else if (isRunning) {
+      audio.resumeMusic()
+    }
+  }, [isPaused, isRunning, audio])
 
   // Focus game container
   useEffect(() => {
@@ -82,14 +85,7 @@ function Game({ onGameOver }) {
   useEffect(() => {
     const handlePause = (e) => {
       if (e.key === 'Escape' || e.key === 'p' || e.key === 'P') {
-        setIsPaused(prev => {
-          if (!prev) {
-            audio.pauseMusic()
-          } else {
-            audio.resumeMusic()
-          }
-          return !prev
-        })
+        setIsPaused(prev => !prev)
       }
       // Toggle mute with M key
       if (e.key === 'm' || e.key === 'M') {

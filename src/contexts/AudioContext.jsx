@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { createContext, useCallback, useContext, useEffect, useRef } from 'react'
 
 // Audio context for generating sound effects
 let audioContext = null
@@ -6,6 +6,10 @@ let audioContext = null
 function getAudioContext() {
   if (!audioContext) {
     audioContext = new (window.AudioContext || window.webkitAudioContext)()
+  }
+  // Resume if suspended (browser autoplay policy)
+  if (audioContext.state === 'suspended') {
+    audioContext.resume()
   }
   return audioContext
 }
@@ -39,7 +43,6 @@ function playExplosionSound() {
   try {
     const ctx = getAudioContext()
 
-    // Create noise for explosion
     const bufferSize = ctx.sampleRate * 0.3
     const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate)
     const output = buffer.getChannelData(0)
@@ -107,10 +110,10 @@ function playPowerUpSound() {
     gainNode.connect(ctx.destination)
 
     oscillator.type = 'sine'
-    oscillator.frequency.setValueAtTime(523.25, ctx.currentTime) // C5
-    oscillator.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1) // E5
-    oscillator.frequency.setValueAtTime(783.99, ctx.currentTime + 0.2) // G5
-    oscillator.frequency.setValueAtTime(1046.50, ctx.currentTime + 0.3) // C6
+    oscillator.frequency.setValueAtTime(523.25, ctx.currentTime)
+    oscillator.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1)
+    oscillator.frequency.setValueAtTime(783.99, ctx.currentTime + 0.2)
+    oscillator.frequency.setValueAtTime(1046.50, ctx.currentTime + 0.3)
 
     gainNode.gain.setValueAtTime(0.3, ctx.currentTime)
     gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4)
@@ -151,7 +154,7 @@ function playGameOverSound() {
   try {
     const ctx = getAudioContext()
 
-    const notes = [392, 349.23, 329.63, 293.66, 261.63] // G4, F4, E4, D4, C4
+    const notes = [392, 349.23, 329.63, 293.66, 261.63]
 
     notes.forEach((freq, i) => {
       const oscillator = ctx.createOscillator()
@@ -175,41 +178,61 @@ function playGameOverSound() {
   }
 }
 
-// Custom hook for audio management
-export function useAudio() {
+// Audio Context
+const AudioContext = createContext(null)
+
+// Background music tracks
+const MUSIC_TRACKS = [
+  '/music/VoxelRevolution.mp3',
+  '/music/NewerWave.mp3',
+  '/music/BeautyFlow.mp3',
+  '/music/DesertofLostSouls.mp3',
+  '/music/BleepingDemo.mp3',
+]
+
+export function AudioProvider({ children }) {
   const bgMusicRef = useRef(null)
   const isMutedRef = useRef(false)
+  const currentTrackRef = useRef(null)
 
-  // Initialize background music
+  // Cleanup on unmount
   useEffect(() => {
-    const tracks = [
-      '/music/VoxelRevolution.mp3',
-      '/music/NewerWave.mp3',
-      '/music/BeautyFlow.mp3',
-      '/music/DesertofLostSouls.mp3',
-      '/music/BleepingDemo.mp3',
-    ]
-
-    // Pick a random track
-    const randomTrack = tracks[Math.floor(Math.random() * tracks.length)]
-
-    bgMusicRef.current = new Audio(randomTrack)
-    bgMusicRef.current.loop = true
-    bgMusicRef.current.volume = 0.3
-
     return () => {
       if (bgMusicRef.current) {
         bgMusicRef.current.pause()
+        bgMusicRef.current.src = ''
         bgMusicRef.current = null
       }
     }
   }, [])
 
   const startMusic = useCallback(() => {
-    if (bgMusicRef.current && !isMutedRef.current) {
-      bgMusicRef.current.play().catch(() => {
-        // Autoplay blocked, will start on user interaction
-      })
+    // Stop any existing music first
+    if (bgMusicRef.current) {
+      bgMusicRef.current.pause()
+    }
+
+    // Pick a random track
+    const randomTrack = MUSIC_TRACKS[Math.floor(Math.random() * MUSIC_TRACKS.length)]
+    currentTrackRef.current = randomTrack
+
+    // Create new audio element
+    const audio = new Audio(randomTrack)
+    audio.loop = true
+    audio.volume = 0.3
+    bgMusicRef.current = audio
+
+    // Play immediately (this is called from a user click handler)
+    const playPromise = audio.play()
+
+    if (playPromise !== undefined) {
+      playPromise
+        .then(() => {
+          console.log('🎵 Background music started:', randomTrack)
+        })
+        .catch((error) => {
+          console.warn('Music autoplay blocked:', error.message)
+        })
     }
   }, [])
 
@@ -270,7 +293,7 @@ export function useAudio() {
     if (!isMutedRef.current) playGameOverSound()
   }, [])
 
-  return {
+  const value = {
     startMusic,
     stopMusic,
     pauseMusic,
@@ -284,6 +307,20 @@ export function useAudio() {
     playDamage,
     playGameOver,
   }
+
+  return (
+    <AudioContext.Provider value={value}>
+      {children}
+    </AudioContext.Provider>
+  )
+}
+
+export function useAudio() {
+  const context = useContext(AudioContext)
+  if (!context) {
+    throw new Error('useAudio must be used within an AudioProvider')
+  }
+  return context
 }
 
 export default useAudio

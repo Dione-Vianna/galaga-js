@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import Game from './components/Game'
 import Menu from './components/Menu'
+import { AudioProvider, useAudio } from './contexts/AudioContext'
 
-function App() {
+function AppContent() {
   const [gameState, setGameState] = useState('menu') // menu, playing, gameover
   const [finalScore, setFinalScore] = useState(0)
   const [highScore, setHighScore] = useState(() => {
@@ -10,7 +11,11 @@ function App() {
     return saved ? parseInt(saved, 10) : 0
   })
 
+  const audio = useAudio()
+
   const handleStartGame = () => {
+    // Start music on user interaction (click)
+    audio.startMusic()
     setGameState('playing')
   }
 
@@ -24,10 +29,12 @@ function App() {
   }
 
   const handleRestart = () => {
+    audio.startMusic()
     setGameState('playing')
   }
 
   const handleBackToMenu = () => {
+    audio.stopMusic()
     setGameState('menu')
   }
 
@@ -51,6 +58,14 @@ function App() {
         />
       )}
     </div>
+  )
+}
+
+function App() {
+  return (
+    <AudioProvider>
+      <AppContent />
+    </AudioProvider>
   )
 }
 
