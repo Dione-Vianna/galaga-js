@@ -63,7 +63,13 @@ function Game({ onGameOver }) {
   const enemiesDefeated = useRef(0)
   const gameContainerRef = useRef(null)
   const mobileMovement = useRef({ left: false, right: false })
+  const playerXRef = useRef(playerX) // Ref to track current player position
   const [isMobile, setIsMobile] = useState(false)
+
+  // Keep playerXRef in sync with playerX state
+  useEffect(() => {
+    playerXRef.current = playerX
+  }, [playerX])
 
   // Detect mobile device
   useEffect(() => {
@@ -216,31 +222,34 @@ function Game({ onGameOver }) {
     lastShotTime.current = now
     audio.playShoot()
 
+    // Use ref for current position (important for mobile continuous fire)
+    const currentPlayerX = playerXRef.current
+
     const newBullets = []
 
     if (hasDoubleFire) {
       // Double fire - two bullets
       newBullets.push({
         id: generateId(),
-        x: playerX + PLAYER_WIDTH / 2 - BULLET_WIDTH / 2 - 10,
+        x: currentPlayerX + PLAYER_WIDTH / 2 - BULLET_WIDTH / 2 - 10,
         y: playerY,
       })
       newBullets.push({
         id: generateId(),
-        x: playerX + PLAYER_WIDTH / 2 - BULLET_WIDTH / 2 + 10,
+        x: currentPlayerX + PLAYER_WIDTH / 2 - BULLET_WIDTH / 2 + 10,
         y: playerY,
       })
     } else {
       // Single fire
       newBullets.push({
         id: generateId(),
-        x: playerX + PLAYER_WIDTH / 2 - BULLET_WIDTH / 2,
+        x: currentPlayerX + PLAYER_WIDTH / 2 - BULLET_WIDTH / 2,
         y: playerY,
       })
     }
 
     setBullets(prev => [...prev, ...newBullets])
-  }, [playerX, playerY, bullets.length, hasDoubleFire, audio])
+  }, [playerY, bullets.length, hasDoubleFire, audio])
 
   // Mobile fire handler (must be after fireBullet)
   const handleMobileFire = useCallback(() => {
