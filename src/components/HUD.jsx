@@ -1,4 +1,4 @@
-function HUD({ score, lives, wave, hasDoubleFire, hasShield, hasSpeedBoost }) {
+function HUD({ score, lives, wave, hasDoubleFire, hasShield, hasSpeedBoost, isMuted }) {
   return (
     <div className="absolute top-0 left-0 right-0 z-40 pointer-events-none">
       {/* Top bar */}
@@ -27,6 +27,11 @@ function HUD({ score, lives, wave, hasDoubleFire, hasShield, hasSpeedBoost }) {
             </span>
           ))}
         </div>
+      </div>
+
+      {/* Sound indicator */}
+      <div className="absolute top-2 right-2 text-lg">
+        {isMuted ? '🔇' : '🔊'}
       </div>
 
       {/* Active power-ups */}

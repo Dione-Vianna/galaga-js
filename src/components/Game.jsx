@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useAudio } from '../hooks/useAudio'
 import {
   BULLET_HEIGHT,
   BULLET_SPEED,
@@ -37,6 +38,7 @@ function Game({ onGameOver }) {
   const [wave, setWave] = useState(1)
   const [isRunning, setIsRunning] = useState(true)
   const [isPaused, setIsPaused] = useState(false)
+  const [isMuted, setIsMuted] = useState(false)
 
   // Player state
   const [playerX, setPlayerX] = useState(GAME_WIDTH / 2 - PLAYER_WIDTH / 2)
@@ -60,6 +62,15 @@ function Game({ onGameOver }) {
   const enemiesDefeated = useRef(0)
   const gameContainerRef = useRef(null)
 
+  // Audio
+  const audio = useAudio()
+
+  // Start background music when game starts
+  useEffect(() => {
+    audio.startMusic()
+    return () => audio.stopMusic()
+  }, [audio])
+
   // Focus game container
   useEffect(() => {
     if (gameContainerRef.current) {
@@ -71,12 +82,24 @@ function Game({ onGameOver }) {
   useEffect(() => {
     const handlePause = (e) => {
       if (e.key === 'Escape' || e.key === 'p' || e.key === 'P') {
-        setIsPaused(prev => !prev)
+        setIsPaused(prev => {
+          if (!prev) {
+            audio.pauseMusic()
+          } else {
+            audio.resumeMusic()
+          }
+          return !prev
+        })
+      }
+      // Toggle mute with M key
+      if (e.key === 'm' || e.key === 'M') {
+        const muted = audio.toggleMute()
+        setIsMuted(muted)
       }
     }
     window.addEventListener('keydown', handlePause)
     return () => window.removeEventListener('keydown', handlePause)
-  }, [])
+  }, [audio])
 
   // Spawn enemies
   const spawnEnemy = useCallback(() => {
@@ -132,6 +155,7 @@ function Game({ onGameOver }) {
   // Apply power-up
   const applyPowerUp = useCallback((type) => {
     const powerUp = POWERUP_TYPES[type]
+    audio.playPowerUp()
 
     switch (type) {
       case 'doubleFire':
@@ -150,7 +174,7 @@ function Game({ onGameOver }) {
         setLives(prev => Math.min(prev + 1, 5))
         break
     }
-  }, [])
+  }, [audio])
 
   // Fire bullet
   const fireBullet = useCallback(() => {
@@ -161,6 +185,7 @@ function Game({ onGameOver }) {
     if (bullets.length >= MAX_BULLETS) return
 
     lastShotTime.current = now
+    audio.playShoot()
 
     const newBullets = []
 
@@ -186,7 +211,7 @@ function Game({ onGameOver }) {
     }
 
     setBullets(prev => [...prev, ...newBullets])
-  }, [playerX, playerY, bullets.length, hasDoubleFire])
+  }, [playerX, playerY, bullets.length, hasDoubleFire, audio])
 
   // Game loop
   const gameLoop = useCallback((deltaTime) => {
@@ -275,6 +300,7 @@ function Game({ onGameOver }) {
                 const enemyType = ENEMY_TYPES[enemy.type]
                 setScore(prev => prev + enemyType.points)
                 enemiesDefeated.current++
+                audio.playExplosion()
 
                 // Check for wave progression
                 if (enemiesDefeated.current >= 10 + wave * 5) {
@@ -297,6 +323,7 @@ function Game({ onGameOver }) {
                 return null // Remove enemy
               }
 
+              audio.playHit()
               return { ...enemy, health: newHealth }
             }
 
@@ -338,16 +365,20 @@ function Game({ onGameOver }) {
 
         if (checkCollision(playerRect, enemyRect)) {
           if (!hasShield) {
+            audio.playDamage()
             setLives(prev => {
               const newLives = prev - 1
               if (newLives <= 0) {
                 setIsRunning(false)
+                audio.stopMusic()
+                audio.playGameOver()
                 setTimeout(() => onGameOver(score), 500)
               }
               return newLives
             })
           }
 
+          audio.playExplosion()
           // Add explosion at enemy position
           setExplosions(prev => [...prev, {
             id: generateId(),
@@ -387,10 +418,13 @@ function Game({ onGameOver }) {
       return prevEnemies.filter(enemy => {
         if (enemy.y >= GAME_HEIGHT - ENEMY_HEIGHT) {
           if (!hasShield) {
+            audio.playDamage()
             setLives(prev => {
               const newLives = prev - 1
               if (newLives <= 0) {
                 setIsRunning(false)
+                audio.stopMusic()
+                audio.playGameOver()
                 setTimeout(() => onGameOver(score), 500)
               }
               return newLives
@@ -401,7 +435,7 @@ function Game({ onGameOver }) {
         return true
       })
     })
-  }, [isPaused, isRunning, fireBullet, spawnEnemy, spawnPowerUp, applyPowerUp, playerX, playerY, hasShield, hasSpeedBoost, score, wave, onGameOver])
+  }, [isPaused, isRunning, fireBullet, spawnEnemy, spawnPowerUp, applyPowerUp, playerX, playerY, hasShield, hasSpeedBoost, score, wave, onGameOver, audio])
 
   useGameLoop(gameLoop, isRunning && !isPaused)
 
@@ -428,6 +462,7 @@ function Game({ onGameOver }) {
           hasDoubleFire={hasDoubleFire}
           hasShield={hasShield}
           hasSpeedBoost={hasSpeedBoost}
+          isMuted={isMuted}
         />
 
         {/* Power-ups */}
@@ -474,7 +509,7 @@ function Game({ onGameOver }) {
 
       {/* Controls hint */}
       <div className="mt-4 text-center text-gray-500 font-arcade text-xs">
-        ← → MOVE | SPACE FIRE | P PAUSE
+        ← → MOVE | SPACE FIRE | P PAUSE | M MUTE
       </div>
     </div>
   )
