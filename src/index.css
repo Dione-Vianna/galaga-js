@@ -10,14 +10,22 @@
   box-sizing: border-box;
 }
 
+html,
 body {
   background-color: #000;
   min-height: 100vh;
+  min-height: 100dvh;
+  /* Dynamic viewport height for mobile */
   display: flex;
   justify-content: center;
   align-items: center;
   font-family: 'Press Start 2P', monospace;
   overflow: hidden;
+  touch-action: none;
+  /* Prevent browser gestures */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 #root {
@@ -25,6 +33,23 @@ body {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
+}
+
+/* Prevent pull-to-refresh and other gestures */
+body {
+  overscroll-behavior: none;
+}
+
+/* Mobile viewport fixes */
+@supports (height: 100dvh) {
+
+  html,
+  body,
+  #root {
+    height: 100dvh;
+  }
 }
 
 /* Scanline effect for retro feel */

@@ -73,46 +73,46 @@ function GameOver({ score, highScore, onRestart, onMenu }) {
   const isNewHighScore = score >= highScore && score > 0
 
   return (
-    <div className="flex flex-col items-center justify-center p-8 border-4 border-arcade-red rounded-lg bg-black/90 crt-glow">
-      <h1 className="text-4xl text-arcade-red font-arcade animate-blink mb-8">
+    <div className="flex flex-col items-center justify-center p-4 md:p-8 border-4 border-arcade-red rounded-lg bg-black/90 crt-glow mx-4">
+      <h1 className="text-2xl md:text-4xl text-arcade-red font-arcade animate-blink mb-6 md:mb-8">
         GAME OVER
       </h1>
 
       {isNewHighScore && (
-        <div className="text-arcade-yellow font-arcade text-lg mb-4 animate-pulse">
+        <div className="text-arcade-yellow font-arcade text-sm md:text-lg mb-4 animate-pulse text-center">
           ★ NEW HIGH SCORE! ★
         </div>
       )}
 
-      <div className="text-white font-arcade text-xl mb-2">
+      <div className="text-white font-arcade text-lg md:text-xl mb-2">
         SCORE: <span className="text-arcade-cyan">{score.toLocaleString()}</span>
       </div>
 
-      <div className="text-gray-400 font-arcade text-sm mb-8">
+      <div className="text-gray-400 font-arcade text-xs md:text-sm mb-6 md:mb-8">
         HIGH SCORE: <span className="text-arcade-yellow">{highScore.toLocaleString()}</span>
       </div>
 
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3 md:gap-4 w-full max-w-xs">
         <button
           onClick={onRestart}
-          className="px-8 py-4 bg-arcade-green text-black font-arcade text-sm 
+          className="px-6 py-3 md:px-8 md:py-4 bg-arcade-green text-black font-arcade text-xs md:text-sm 
                      hover:bg-green-400 transition-colors border-4 border-green-700
-                     active:translate-y-1"
+                     active:translate-y-1 active:scale-95"
         >
           PLAY AGAIN
         </button>
 
         <button
           onClick={onMenu}
-          className="px-8 py-4 bg-arcade-cyan text-black font-arcade text-sm 
+          className="px-6 py-3 md:px-8 md:py-4 bg-arcade-cyan text-black font-arcade text-xs md:text-sm 
                      hover:bg-cyan-400 transition-colors border-4 border-cyan-700
-                     active:translate-y-1"
+                     active:translate-y-1 active:scale-95"
         >
           MAIN MENU
         </button>
       </div>
 
-      <div className="mt-8 text-gray-500 font-arcade text-xs">
+      <div className="mt-6 md:mt-8 text-gray-500 font-arcade text-xs hidden md:block">
         PRESS ENTER TO RESTART
       </div>
     </div>

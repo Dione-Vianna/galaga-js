@@ -2,8 +2,16 @@ import { useEffect, useState } from 'react'
 
 function Menu({ onStart, highScore }) {
   const [showPress, setShowPress] = useState(true)
+  const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
+    // Detect mobile
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768 || 'ontouchstart' in window)
+    }
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+
     const interval = setInterval(() => {
       setShowPress(prev => !prev)
     }, 500)
@@ -19,11 +27,12 @@ function Menu({ onStart, highScore }) {
     return () => {
       clearInterval(interval)
       window.removeEventListener('keydown', handleKeyPress)
+      window.removeEventListener('resize', checkMobile)
     }
   }, [onStart])
 
   return (
-    <div className="flex flex-col items-center justify-center p-8 relative">
+    <div className="flex flex-col items-center justify-center p-4 md:p-8 relative min-h-screen w-full">
       {/* Stars background */}
       <div className="absolute inset-0 overflow-hidden">
         {[...Array(50)].map((_, i) => (
@@ -40,8 +49,8 @@ function Menu({ onStart, highScore }) {
       </div>
 
       {/* Logo */}
-      <div className="relative z-10 mb-12">
-        <h1 className="text-6xl font-arcade text-transparent bg-clip-text 
+      <div className="relative z-10 mb-6 md:mb-12">
+        <h1 className="text-4xl md:text-6xl font-arcade text-transparent bg-clip-text 
                        bg-gradient-to-b from-arcade-yellow via-arcade-red to-arcade-pink
                        drop-shadow-[0_0_30px_rgba(255,215,0,0.5)]">
           GALAGA
@@ -52,10 +61,10 @@ function Menu({ onStart, highScore }) {
       </div>
 
       {/* Spaceship decoration */}
-      <div className="mb-8 animate-bounce z-10">
+      <div className="mb-6 md:mb-8 animate-bounce z-10">
         <svg
           viewBox="0 0 40 40"
-          className="w-16 h-16"
+          className="w-12 h-12 md:w-16 md:h-16"
           style={{
             filter: 'drop-shadow(0 0 15px rgba(0, 255, 255, 0.8))',
           }}
@@ -89,41 +98,50 @@ function Menu({ onStart, highScore }) {
       </div>
 
       {/* High Score */}
-      <div className="text-arcade-yellow font-arcade text-sm mb-8 z-10">
+      <div className="text-arcade-yellow font-arcade text-xs md:text-sm mb-6 md:mb-8 z-10">
         HIGH SCORE: {highScore.toLocaleString()}
       </div>
 
       {/* Start button */}
       <button
         onClick={onStart}
-        className="px-12 py-6 bg-gradient-to-b from-arcade-green to-green-700 
-                   text-black font-arcade text-lg rounded-lg
+        className="px-8 py-4 md:px-12 md:py-6 bg-gradient-to-b from-arcade-green to-green-700 
+                   text-black font-arcade text-base md:text-lg rounded-lg
                    hover:from-green-400 hover:to-green-600 
                    transition-all duration-200 border-4 border-green-900
                    shadow-[0_0_20px_rgba(0,255,0,0.5)]
-                   active:translate-y-1 z-10"
+                   active:translate-y-1 active:scale-95 z-10"
       >
-        START GAME
+        {isMobile ? 'TAP TO START' : 'START GAME'}
       </button>
 
-      {/* Press any key */}
-      <div className={`mt-8 font-arcade text-sm text-white z-10 transition-opacity duration-200
-                      ${showPress ? 'opacity-100' : 'opacity-0'}`}>
-        PRESS ENTER OR SPACE
-      </div>
+      {/* Press any key - desktop only */}
+      {!isMobile && (
+        <div className={`mt-8 font-arcade text-sm text-white z-10 transition-opacity duration-200
+                        ${showPress ? 'opacity-100' : 'opacity-0'}`}>
+          PRESS ENTER OR SPACE
+        </div>
+      )}
 
       {/* Controls info */}
-      <div className="mt-12 text-gray-500 font-arcade text-xs z-10 text-center">
+      <div className="mt-8 md:mt-12 text-gray-500 font-arcade text-xs z-10 text-center">
         <div className="mb-2">CONTROLS:</div>
-        <div className="flex gap-8 justify-center">
-          <div>← → MOVE</div>
-          <div>SPACE FIRE</div>
-        </div>
+        {isMobile ? (
+          <div className="flex flex-col gap-1">
+            <div>◀ ▶ MOVE</div>
+            <div>🔴 FIRE</div>
+          </div>
+        ) : (
+          <div className="flex gap-4 md:gap-8 justify-center">
+            <div>← → MOVE</div>
+            <div>SPACE FIRE</div>
+          </div>
+        )}
       </div>
 
       {/* Footer */}
-      <div className="absolute bottom-4 text-gray-600 font-arcade text-xs">
-        © 2025 GALAGA - DIONE VIANNA
+      <div className="absolute bottom-4 text-gray-600 font-arcade text-xs z-10">
+        © 2025 GALAGA JS
       </div>
     </div>
   )

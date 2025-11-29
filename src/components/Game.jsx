@@ -27,6 +27,7 @@ import Bullet from './Bullet'
 import Enemy from './Enemy'
 import Explosion from './Explosion'
 import HUD from './HUD'
+import MobileControls from './MobileControls'
 import Player from './Player'
 import PowerUp from './PowerUp'
 import StarField from './StarField'
@@ -61,6 +62,18 @@ function Game({ onGameOver }) {
   const lastSpawnTime = useRef(0)
   const enemiesDefeated = useRef(0)
   const gameContainerRef = useRef(null)
+  const mobileMovement = useRef({ left: false, right: false })
+  const [isMobile, setIsMobile] = useState(false)
+
+  // Detect mobile device
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768 || 'ontouchstart' in window)
+    }
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   // Audio
   const audio = useAudio()
@@ -96,6 +109,26 @@ function Game({ onGameOver }) {
     window.addEventListener('keydown', handlePause)
     return () => window.removeEventListener('keydown', handlePause)
   }, [audio])
+
+  // Mobile control handlers (movement only - fire defined after fireBullet)
+  const handleMobileLeft = useCallback(() => {
+    mobileMovement.current.left = true
+    mobileMovement.current.right = false
+  }, [])
+
+  const handleMobileRight = useCallback(() => {
+    mobileMovement.current.right = true
+    mobileMovement.current.left = false
+  }, [])
+
+  const handleMobileStopMove = useCallback(() => {
+    mobileMovement.current.left = false
+    mobileMovement.current.right = false
+  }, [])
+
+  const handleMobilePause = useCallback(() => {
+    setIsPaused(prev => !prev)
+  }, [])
 
   // Spawn enemies
   const spawnEnemy = useCallback(() => {
@@ -209,22 +242,28 @@ function Game({ onGameOver }) {
     setBullets(prev => [...prev, ...newBullets])
   }, [playerX, playerY, bullets.length, hasDoubleFire, audio])
 
+  // Mobile fire handler (must be after fireBullet)
+  const handleMobileFire = useCallback(() => {
+    fireBullet()
+  }, [fireBullet])
+
   // Game loop
   const gameLoop = useCallback((deltaTime) => {
     if (isPaused || !isRunning) return
 
     const keys = keysPressed.current
+    const mobile = mobileMovement.current
     const speed = hasSpeedBoost ? PLAYER_SPEED * 1.5 : PLAYER_SPEED
 
-    // Move player
-    if (keys['ArrowLeft'] || keys['a'] || keys['A']) {
+    // Move player (keyboard or mobile)
+    if (keys['ArrowLeft'] || keys['a'] || keys['A'] || mobile.left) {
       setPlayerX(prev => clamp(prev - speed, 0, GAME_WIDTH - PLAYER_WIDTH))
     }
-    if (keys['ArrowRight'] || keys['d'] || keys['D']) {
+    if (keys['ArrowRight'] || keys['d'] || keys['D'] || mobile.right) {
       setPlayerX(prev => clamp(prev + speed, 0, GAME_WIDTH - PLAYER_WIDTH))
     }
 
-    // Fire
+    // Fire (keyboard only - mobile uses button)
     if (keys[' ']) {
       fireBullet()
     }
@@ -441,11 +480,17 @@ function Game({ onGameOver }) {
   }, [])
 
   return (
-    <div className="relative" ref={gameContainerRef} tabIndex={0}>
+    <div className="relative flex flex-col items-center" ref={gameContainerRef} tabIndex={0}>
       {/* Game container */}
       <div
-        className="relative overflow-hidden bg-black border-4 border-arcade-cyan crt-glow scanlines"
-        style={{ width: GAME_WIDTH, height: GAME_HEIGHT }}
+        className="relative overflow-hidden bg-black border-4 border-arcade-cyan crt-glow scanlines
+                   max-w-full"
+        style={{
+          width: isMobile ? '100vw' : GAME_WIDTH,
+          height: isMobile ? `calc(100vh - 120px)` : GAME_HEIGHT,
+          maxWidth: GAME_WIDTH,
+          maxHeight: GAME_HEIGHT,
+        }}
       >
         {/* Star field background */}
         <StarField />
@@ -503,10 +548,23 @@ function Game({ onGameOver }) {
         )}
       </div>
 
-      {/* Controls hint */}
-      <div className="mt-4 text-center text-gray-500 font-arcade text-xs">
-        ← → MOVE | SPACE FIRE | P PAUSE | M MUTE
-      </div>
+      {/* Controls hint - desktop only */}
+      {!isMobile && (
+        <div className="mt-4 text-center text-gray-500 font-arcade text-xs">
+          ← → MOVE | SPACE FIRE | P PAUSE | M MUTE
+        </div>
+      )}
+
+      {/* Mobile controls */}
+      {isMobile && (
+        <MobileControls
+          onMoveLeft={handleMobileLeft}
+          onMoveRight={handleMobileRight}
+          onStopMove={handleMobileStopMove}
+          onFire={handleMobileFire}
+          onPause={handleMobilePause}
+        />
+      )}
     </div>
   )
 }
