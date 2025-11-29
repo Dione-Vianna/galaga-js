@@ -30,13 +30,30 @@ Um jogo arcade clássico desenvolvido com **React**, **Vite** e **Tailwind CSS**
 - **Nave SVG** customizada estilo Galaga
 - Animações suaves e responsivas
 
-### 🕹️ Controles
+### 🔊 Sistema de Áudio
+- **Música de fundo** ambiente para maior imersão
+- **Efeitos sonoros** gerados com Web Audio API:
+  - 🔫 Som de tiro
+  - 💥 Explosão de inimigo
+  - ⚡ Impacto de tiro
+  - ✨ Coleta de power-up
+  - 💔 Dano ao jogador
+  - 🎮 Game Over
+
+### 🕹️ Controles Desktop
 | Tecla | Ação |
 |-------|------|
 | `← →` ou `A D` | Mover nave |
 | `ESPAÇO` | Atirar |
 | `P` ou `ESC` | Pausar/Despausar |
 | `ENTER` ou `ESPAÇO` | Iniciar jogo |
+
+### 📱 Controles Mobile
+| Botão | Ação |
+|-------|------|
+| `◀` `▶` | Mover nave esquerda/direita |
+| `🔥 FIRE` | Atirar (segure para tiro contínuo) |
+| `⏸` | Pausar/Despausar |
 
 ## 🚀 Como Começar
 
@@ -80,20 +97,24 @@ galaga-js/
 ├── src/
 │   ├── components/
 │   │   ├── Game.jsx           # Componente principal do jogo
-│   │   ├── Menu.jsx           # Menu inicial
-│   │   ├── Player.jsx         # Nave do jogador
+│   │   ├── Menu.jsx           # Menu inicial (responsivo)
+│   │   ├── Player.jsx         # Nave do jogador (SVG)
 │   │   ├── Enemy.jsx          # Inimigos
 │   │   ├── Bullet.jsx         # Tiros
 │   │   ├── Explosion.jsx      # Explosões
 │   │   ├── PowerUp.jsx        # Power-ups
 │   │   ├── HUD.jsx            # Interface do jogo
-│   │   └── StarField.jsx      # Fundo de estrelas
+│   │   ├── StarField.jsx      # Fundo de estrelas
+│   │   └── MobileControls.jsx # Controles touch mobile
+│   ├── contexts/
+│   │   └── AudioContext.jsx   # Gerenciamento de áudio global
 │   ├── hooks/
 │   │   └── useGame.js         # Lógica e constantes do jogo
 │   ├── App.jsx                # Componente raiz
 │   ├── main.jsx               # Entrada da aplicação
 │   └── index.css              # Estilos globais
 ├── public/
+│   ├── music/                 # Arquivos de música (opcional)
 │   └── vite.svg               # Ícone
 ├── index.html                 # HTML principal
 ├── vite.config.js             # Configuração Vite
@@ -157,11 +178,14 @@ colors: {
 - **Vite** - Build tool rápido
 - **Tailwind CSS** - Utility-first CSS
 - **PostCSS** - Processador CSS
+- **Web Audio API** - Efeitos sonoros procedurais
+- **HTML5 Audio** - Música de fundo
 
 ## 📱 Compatibilidade
 
 - ✅ Desktop (Windows, macOS, Linux)
-- ⚠️ Mobile (Controles otimizados não implementados)
+- ✅ Mobile (iOS, Android) - Controles touch otimizados
+- ✅ Tablet - Interface adaptativa
 - ✅ Navegadores modernos (Chrome, Firefox, Safari, Edge)
 
 ## 🐛 Bugs Conhecidos
@@ -175,6 +199,7 @@ Nenhum no momento! Relate issues em: [GitHub Issues](https://github.com/seu-usua
 3. **Mantenha movimento constante** - Inimigos são rápidos em waves altas
 4. **Escudo é valioso** - Use para atravessar ondas difíceis
 5. **Pause para respirar** - Use `P` para pensar na estratégia
+6. **No mobile** - Segure o botão FIRE para tiro contínuo
 
 ## 📄 Licença
 
@@ -192,4 +217,5 @@ Inspirado no clássico arcade **Galaga (1981)** - Namco
 
 **Divirta-se jogando! 🚀**
 
-Pressione ENTER para começar! 🎮
+📱 No mobile? Toque para começar!  
+🖥️ No desktop? Pressione ENTER para começar! 🎮
